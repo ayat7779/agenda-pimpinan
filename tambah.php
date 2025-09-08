@@ -1,44 +1,66 @@
 <?php
+// Aktifkan mode ketat untuk error reporting, tapi matikan display_errors di lingkungan produksi
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 include 'koneksi.php';
-$pesan_error = ""; // Inisialisasi variabel pesan error
 
+$pesan_error = ""; 
+
+// Validasi input
 $kegiatan_err = $tempat_err = $penanggungjawab_err = $pakaian_err = $pejabat_err = $lampiran_err = $hasil_agenda_err = $status_err = "";
 
+// Cek jika metode request adalah POST
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $tgl_agenda = $_POST['tgl_agenda'];
-    $waktu = $_POST['waktu'];
-    $nama_kegiatan = $_POST['nama_kegiatan'];
-    $tempat_kegiatan = $_POST['tempat_kegiatan'];
-    $penanggungjawab_kegiatan = $_POST['penanggungjawab_kegiatan'];
-    $pakaian_kegiatan = $_POST['pakaian_kegiatan'];
-    $pejabat = $_POST['pejabat'];
-    $hasil_agendai = $_POST['hasil_agenda'];
-    $status = $_POST['status'];
-    
+    // Sanitize dan validasi input dari formulir
+    $tgl_agenda = filter_var($_POST['tgl_agenda'], FILTER_SANITIZE_STRING);
+    $waktu = filter_var($_POST['waktu'], FILTER_SANITIZE_STRING);
+    $nama_kegiatan = filter_var($_POST['nama_kegiatan'], FILTER_SANITIZE_STRING);
+    $tempat_kegiatan = filter_var($_POST['tempat_kegiatan'], FILTER_SANITIZE_STRING);
+    $penanggungjawab_kegiatan = filter_var($_POST['penanggungjawab_kegiatan'], FILTER_SANITIZE_STRING);
+    $pakaian_kegiatan = filter_var($_POST['pakaian_kegiatan'], FILTER_SANITIZE_STRING);
+    $pejabat = filter_var($_POST['pejabat'], FILTER_SANITIZE_STRING);
+    $hasil_agenda = filter_var($_POST['hasil_agenda'], FILTER_SANITIZE_STRING);
+    $status = filter_var($_POST['status'], FILTER_SANITIZE_NUMBER_INT);
+
+    // Proses unggah file
     $lampiran = "";
     $uploadOk = 1;
     $max_filesize = 2097152; // 2MB dalam byte
 
     if (isset($_FILES['lampiran']) && $_FILES['lampiran']['error'] == 0) {
         $file_size = $_FILES['lampiran']['size'];
-        
+        $file_info = pathinfo($_FILES["lampiran"]["name"]);
+        $file_extension = strtolower($file_info['extension']);
+        $allowed_extensions = array("pdf", "doc", "docx", "jpg", "jpeg", "png");
+
         // Cek ukuran file
         if ($file_size > $max_filesize) {
             $pesan_error = "Ukuran file melebihi 2MB. Mohon unggah file yang lebih kecil.";
             $uploadOk = 0;
         }
 
+        // Cek ekstensi file
+        if (!in_array($file_extension, $allowed_extensions)) {
+            $pesan_error = "Tipe file tidak diizinkan. Hanya PDF, Word, dan gambar yang diperbolehkan.";
+            $uploadOk = 0;
+        }
+
+        // Cek jika ada error
         if ($uploadOk == 1) {
             $target_dir = "uploads/";
-            $nama_file = basename($_FILES["lampiran"]["name"]);
-            $target_file = $target_dir . $nama_file;
+            // Buat nama file unik untuk mencegah overwriting dan eksekusi skrip
+            $unique_filename = md5(uniqid(rand(), true)) . '.' . $file_extension;
+            $target_file = $target_dir . $unique_filename;
             
+            // Pastikan direktori 'uploads' ada dan memiliki izin tulis
+            if (!is_dir($target_dir)) {
+                mkdir($target_dir, 0755, true);
+            }
+
             if (move_uploaded_file($_FILES["lampiran"]["tmp_name"], $target_file)) {
-                $lampiran = $nama_file;
+                $lampiran = $unique_filename;
             } else {
                 $pesan_error = "Terjadi kesalahan saat mengunggah file. Kode error: " . $_FILES['lampiran']['error'];
             }
@@ -46,18 +68,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     
     if (empty($pesan_error)) {
+        // Gunakan prepared statements untuk mencegah SQL Injection
         $sql = "INSERT INTO tb_agenda (tgl_agenda, waktu, nama_kegiatan, tempat_kegiatan, penanggungjawab_kegiatan, pakaian_kegiatan, pejabat, lampiran, hasil_agenda, id_status) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        
         $stmt = $koneksi->prepare($sql);
-        $stmt->bind_param("sssssssssi", $tgl_agenda, $waktu, $nama_kegiatan, $tempat_kegiatan, $penanggungjawab_kegiatan, $pakaian_kegiatan, $pejabat, $lampiran, $hasil_agenda, $status);
+        
+        // Periksa apakah prepared statement berhasil
+        if ($stmt) {
+            $stmt->bind_param("sssssssssi", $tgl_agenda, $waktu, $nama_kegiatan, $tempat_kegiatan, $penanggungjawab_kegiatan, $pakaian_kegiatan, $pejabat, $lampiran, $hasil_agenda, $status);
 
-        if ($stmt->execute()) {
-            header("Location: index.php");
-            exit();
+            if ($stmt->execute()) {
+                header("Location: index.php");
+                exit();
+            } else {
+                $pesan_error = "Error saat menyimpan data ke database: " . $stmt->error;
+            }
+            $stmt->close();
         } else {
-            $pesan_error = "Error saat menyimpan data ke database: " . $stmt->error;
+            $pesan_error = "Error saat mempersiapkan statement: " . $koneksi->error;
         }
-        $stmt->close();
     }
 }
 
@@ -88,7 +118,7 @@ $result_status = $koneksi->query($sql_status);
     <div class="container">
         <h2>Tambah Agenda Baru</h2>
         <?php if (!empty($pesan_error)): ?>
-            <p class="error"><?php echo $pesan_error; ?></p>
+            <p class="error"><?php echo htmlspecialchars($pesan_error); ?></p>
         <?php endif; ?>
 
         <form id="formAgenda" action="tambah.php" method="post" enctype="multipart/form-data">
@@ -126,7 +156,8 @@ $result_status = $koneksi->query($sql_status);
                 <?php
                 if ($result_status && $result_status->num_rows > 0) {
                     while($row_status = $result_status->fetch_assoc()) {
-                        echo "<option value='" . $row_status['id_status'] . "'>" . $row_status['nama_status'] . "</option>";
+                        // Lakukan HTML escaping untuk mencegah XSS
+                        echo "<option value='" . htmlspecialchars($row_status['id_status']) . "'>" . htmlspecialchars($row_status['nama_status']) . "</option>";
                     }
                 } else {
                     echo "<option value=''>Tidak ada status</option>";
@@ -151,7 +182,6 @@ $result_status = $koneksi->query($sql_status);
                 const fileSize = file.size; // Ukuran dalam byte
                 const maxFileSize = 2 * 1024 * 1024; // 2MB dalam byte
 
-                // Konversi ukuran ke format yang mudah dibaca (KB atau MB)
                 let ukuranTampil;
                 if (fileSize > 1024 * 1024) {
                     ukuranTampil = (fileSize / (1024 * 1024)).toFixed(2) + ' MB';

@@ -39,7 +39,10 @@ if ($filter == 'hari_ini') {
 $sql = "SELECT 
             a.*, 
             b.nama_status,
-            c.isi_tindaklanjut 
+            c.isi_tindaklanjut,
+            c.tgl_tindaklanjut,
+            c.penindaklanjut,
+            c.lampiran AS lampiran_tindaklanjut 
         FROM 
             tb_agenda AS a
         LEFT JOIN 
@@ -137,7 +140,15 @@ $result = $koneksi->query($sql);
                                     </span>
                                 </td>
                                 <td><?php echo htmlspecialchars($hasil_dicapai); ?></td>
-                                <td><?php echo htmlspecialchars($row['isi_tindaklanjut']); ?></td>
+                                <td>Tgl: <?php echo htmlspecialchars($row['tgl_tindaklanjut']); ?><br>
+                                    Isi: <b><?php echo htmlspecialchars($row['isi_tindaklanjut']); ?></b><br>
+                                    Olh: <?php echo htmlspecialchars($row['penindaklanjut']); ?> <br>
+                                    lmp: <?php if (!empty($row['lampiran_tindaklanjut'])): ?>
+                                        <a href="uploads/<?php echo htmlspecialchars($row['lampiran_tindaklanjut']); ?>" target="_blank">Lihat File Tindaklanjut</a>
+                                    <?php else: ?>
+                                        Tidak ada
+                                    <?php endif; ?>
+                                </td>
                                 <td>
                                     <a href="tindaklanjut.php?id=<?php echo htmlspecialchars($row['id_agenda']); ?>" class="button-aksi tindaklanjut">Tindak Lanjut</a>
                                     <a href="edit.php?id=<?php echo htmlspecialchars($row['id_agenda']); ?>" class="button-aksi edit">Edit</a>
