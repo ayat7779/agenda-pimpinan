@@ -39,13 +39,16 @@ if ($filter == 'hari_ini') {
 $sql = "SELECT 
             a.*, 
             b.nama_status,
-            c.isi_tindaklanjut 
+            c.isi_tindaklanjut,
+            d.nama_jabatan 
         FROM 
             tb_agenda AS a
         LEFT JOIN 
             tb_status AS b ON a.id_status = b.id_status 
         LEFT JOIN 
-            tb_tindaklanjut AS c ON a.id_agenda = c.id_agenda    
+            tb_tindaklanjut AS c ON a.id_agenda = c.id_agenda
+        LEFT JOIN 
+            tb_pejabat AS d ON a.pejabat = d.id    
         $where_clause
         ORDER BY 
             a.tgl_agenda DESC, 
@@ -121,7 +124,7 @@ $result = $koneksi->query($sql);
                                 <td><?php echo htmlspecialchars($row['tempat_kegiatan']); ?></td>
                                 <td><?php echo htmlspecialchars($row['penanggungjawab_kegiatan']); ?></td>
                                 <td><?php echo htmlspecialchars($row['pakaian_kegiatan']); ?></td>
-                                <td><?php echo htmlspecialchars($row['pejabat']); ?></td>
+                                <td><?php echo htmlspecialchars($row['nama_jabatan']); ?></td>
                                 <td>
                                     <?php if (!empty($row['lampiran'])): ?>
                                         <span class="status-badge status-belum-mulai">
@@ -139,7 +142,7 @@ $result = $koneksi->query($sql);
                                 <td><?php echo htmlspecialchars($hasil_dicapai); ?></td>
                                 <td><?php echo htmlspecialchars($row['isi_tindaklanjut']); ?></td>
                                 <td>
-                                    <a href="tindaklanjut.php?id=<?php echo htmlspecialchars($row['id_agenda']); ?>" class="button-aksi tindaklanjut">Tindak Lanjut</a>
+                                    <a href="tindaklanjut.php?id=<?php echo htmlspecialchars($row['id_agenda']); ?>" class="button-aksi tindaklanjut">TL</a>
                                     <a href="edit.php?id=<?php echo htmlspecialchars($row['id_agenda']); ?>" class="button-aksi edit">Edit</a>
                                     <a href="hapus.php?id=<?php echo htmlspecialchars($row['id_agenda']); ?>" class="button-aksi hapus" onclick="return confirm('Yakin ingin menghapus data ini?')">Hapus</a>
                                 </td>

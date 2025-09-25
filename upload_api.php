@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nama_kegiatan = $_POST['nama_kegiatan'];
     $tempat_kegiatan = $_POST['tempat_kegiatan'];
     $penanggungjawab_kegiatan = $_POST['penanggungjawab_kegiatan'];
-    $pakaian_kegiatan = $_POST['pakaian_kegiatan'];
+    $pakaian_kegiatan = $_POST['pakaian_kegiatan'];myserver
     $pejabat = $_POST['pejabat'];
     
     // Simpan ke database

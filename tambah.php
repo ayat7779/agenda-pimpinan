@@ -64,6 +64,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 // Ambil data status dari tabel tb_status untuk combobox
 $sql_status = "SELECT * FROM tb_status ORDER BY nama_status ASC";
 $result_status = $koneksi->query($sql_status);
+
+// Ambil data pejabat dari tabel tb_pejabat untuk combobox
+$sql_pejabat = "SELECT * FROM tb_pejabat ORDER BY kode_pejabat ASC";
+$result_pejabat = $koneksi->query($sql_pejabat);
 ?>
 
 <!DOCTYPE html>
@@ -110,8 +114,22 @@ $result_status = $koneksi->query($sql_status);
             <label for="pakaian_kegiatan">Pakaian:</label>
             <input type="text" name="pakaian_kegiatan" required>
             
+            <!-- <label for="pejabat">Pejabat:</label>
+            <input type="text" name="pejabat" required> -->
+
             <label for="pejabat">Pejabat:</label>
-            <input type="text" name="pejabat" required>
+            <select name="pejabat" id="pejabat" required>
+                <option value="">-- Pilih Pejabat --</option>
+                <?php
+                if ($result_pejabat && $result_pejabat->num_rows > 0) {
+                    while($row_pejabat = $result_pejabat->fetch_assoc()) {
+                        echo "<option value='" . $row_pejabat['id'] . "'>" . $row_pejabat['nama_jabatan'] . "</option>";
+                    }
+                } else {
+                    echo "<option value=''>Tidak ada pejabat</option>";
+                }
+                ?>
+            </select>
 
             <label for="lampiran">Lampiran:</label>
             <input type="file" name="lampiran" id="lampiran">
