@@ -40,7 +40,7 @@ $sql = "SELECT
             a.*, 
             b.nama_status,
             c.isi_tindaklanjut,
-            d.nama_jabatan 
+            d.* 
         FROM 
             tb_agenda AS a
         LEFT JOIN 
@@ -124,7 +124,7 @@ $result = $koneksi->query($sql);
                                 <td><?php echo htmlspecialchars($row['tempat_kegiatan']); ?></td>
                                 <td><?php echo htmlspecialchars($row['penanggungjawab_kegiatan']); ?></td>
                                 <td><?php echo htmlspecialchars($row['pakaian_kegiatan']); ?></td>
-                                <td><?php echo htmlspecialchars($row['nama_jabatan']); ?></td>
+                                <td><?php echo htmlspecialchars($row['nama_jabatan'] . ' (' . $row['nama_pejabat'] . ')'); ?></td>
                                 <td>
                                     <?php if (!empty($row['lampiran'])): ?>
                                         <span class="status-badge status-belum-mulai">
