@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 22 Okt 2025 pada 11.20
+-- Waktu pembuatan: 22 Okt 2025 pada 11.31
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.0.30
 
@@ -48,7 +48,7 @@ CREATE TABLE `tb_agenda` (
 INSERT INTO `tb_agenda` (`id_agenda`, `tgl_agenda`, `waktu`, `nama_kegiatan`, `tempat_kegiatan`, `penanggungjawab_kegiatan`, `pakaian_kegiatan`, `pejabat`, `lampiran`, `id_status`, `hasil_agenda`) VALUES
 (22, '2025-08-26', '11:59:00', 'Silaturahmi dan Perkenalan Forum Penyuluh Antikorupsi Provinsi Riau ', 'Inspektorat Daerah Provinsi Riau Jl. Cut Nyak Dien Pekanbaru', 'Drs. H. Eduar, M.Psa, M.Kom, CRMO', 'Menyesuaikan', '2', 'CamScanner 25-08-2025 1148_250826_113326.pdf', 4, 'Supaya dijadwalkan dengan Gubernur'),
 (23, '2025-09-09', '13:00:00', 'Pembaca Berita pada Program Warta Berita Daerah Siang', 'Studio Pro1 99,1 MHz', 'Drs. Agung Prasatya Rosihan Umar', 'Menyesuaikan', '2', 'Sekretaris Daerah Prov Riau.pdf', 4, ''),
-(24, '2025-09-16', '09:00:00', 'Focus Group Discussion (FGD) secara daring untuk mendukung digitalisasi sistem pengadaan pemerintah melalui INAPROC', 'Online via Zoom', 'Sutardi, B.Bus & B.Com (Hons) dan Budi Pramana Ginting', 'Menyesuaikan', '1', 'e1bb14fe5e6f37097482be18eca744de.pdf', 6, ''),
+(24, '2025-09-16', '09:00:00', 'Focus Group Discussion (FGD) secara daring untuk mendukung digitalisasi sistem pengadaan pemerintah melalui INAPROC', 'Online via Zoom', 'Sutardi, B.Bus & B.Com (Hons) dan Budi Pramana Ginting', 'Menyesuaikan', '1', 'e1bb14fe5e6f37097482be18eca744de.pdf', 4, ''),
 (25, '2025-09-02', '08:00:00', 'Gerakan Pangan Murah', 'Halaman Kantor Kelurahan Delima', 'Pemprov. Riau', 'PDH', '1', '', 4, ''),
 (26, '2025-09-02', '08:00:00', 'Rapat Koordinasi terkait Arahan Mendagri ttg Perkembangan Situasi Terkirni dirangkaikan dengan Pengendalian Inflasi Thn 2025 secara Virtual', 'RCC Menara Lancang Kuning', 'Kemendagri (Imanuel 082118800730)', 'PDH Khaki', '2', '', 4, 'Meeting ID 677 057 3756\r\nPassword INFLASI'),
 (27, '2025-09-02', '09:30:00', 'Rapat Koordinasi Terkait Kondisi & Dinamika Sosial Kemasyarakatan Beberapa Waktu ini serta dalam rangka Dukungan Stabilitas Sosial dan Politik di Daerah secara virtual', 'Ruang Rapat Sekda Kantor Gubernur ', 'Kemendagri (Fadel 082298520267)', 'PDH', '1', '', 4, 'Meeting ID : 822 2844 9306 \r\nPasscode : Polpum25'),
@@ -63,16 +63,17 @@ INSERT INTO `tb_agenda` (`id_agenda`, `tgl_agenda`, `waktu`, `nama_kegiatan`, `t
 CREATE TABLE `tb_pejabat` (
   `id` int(11) NOT NULL,
   `kode_pejabat` varchar(10) NOT NULL,
-  `nama_jabatan` varchar(1024) NOT NULL
+  `nama_jabatan` varchar(1024) NOT NULL,
+  `nama_pejabat` varchar(1024) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data untuk tabel `tb_pejabat`
 --
 
-INSERT INTO `tb_pejabat` (`id`, `kode_pejabat`, `nama_jabatan`) VALUES
-(1, '001', 'Sekretaris Daerah'),
-(2, '002', 'Kepala Diskominfotik');
+INSERT INTO `tb_pejabat` (`id`, `kode_pejabat`, `nama_jabatan`, `nama_pejabat`) VALUES
+(1, '001', 'Sekretaris Daerah', 'SYAHRIAL ABDI'),
+(2, '002', 'Kepala Diskominfotik', 'TEZA');
 
 -- --------------------------------------------------------
 
@@ -116,7 +117,8 @@ CREATE TABLE `tb_tindaklanjut` (
 --
 
 INSERT INTO `tb_tindaklanjut` (`id_tindaklanjut`, `tgl_tindaklanjut`, `isi_tindaklanjut`, `penindaklanjut`, `lampiran`, `id_agenda`) VALUES
-(1, '2025-09-07 14:30:43', 'Permohonan pertemuan sudah disampaikan dan Gubernur menjadwalkan tanggal 16 September 2025', 'Ajudan Gubernur', 'tindaklanjut_20250907143043_14c2d6ae273e3069762c4a410bb201d9.docx', 22);
+(1, '2025-09-07 14:30:43', 'Permohonan pertemuan sudah disampaikan dan Gubernur menjadwalkan tanggal 16 September 2025', 'Ajudan Gubernur', 'tindaklanjut_20250907143043_14c2d6ae273e3069762c4a410bb201d9.docx', 22),
+(2, '2025-10-22 11:21:27', 'asdsadsadasd', 'asdasdsad', 'tindaklanjut_20251022112127_39ebd89c07fc14b5bdf1cd64ed372882.docx', 24);
 
 --
 -- Indeks untuk tabel yang dibuang
@@ -172,7 +174,7 @@ ALTER TABLE `tb_status`
 -- AUTO_INCREMENT untuk tabel `tb_tindaklanjut`
 --
 ALTER TABLE `tb_tindaklanjut`
-  MODIFY `id_tindaklanjut` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_tindaklanjut` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
