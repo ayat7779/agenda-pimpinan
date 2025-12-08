@@ -1,233 +1,397 @@
 <?php
-// Aktifkan mode ketat untuk error reporting, tapi matikan display_errors di lingkungan produksi
+// tambah.php - MySQLi compatible
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 include 'koneksi.php';
 
-$pesan_error = ""; 
+$pesan_error = "";
 
-// Validasi input
-$kegiatan_err = $tempat_err = $penanggungjawab_err = $pakaian_err = $pejabat_err = $lampiran_err = $hasil_agenda_err = $status_err = "";
-
-// Cek jika metode request adalah POST
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Sanitize dan validasi input dari formulir
-    $tgl_agenda = filter_var($_POST['tgl_agenda'], FILTER_SANITIZE_STRING);
-    $waktu = filter_var($_POST['waktu'], FILTER_SANITIZE_STRING);
-    $nama_kegiatan = filter_var($_POST['nama_kegiatan'], FILTER_SANITIZE_STRING);
-    $tempat_kegiatan = filter_var($_POST['tempat_kegiatan'], FILTER_SANITIZE_STRING);
-    $penanggungjawab_kegiatan = filter_var($_POST['penanggungjawab_kegiatan'], FILTER_SANITIZE_STRING);
-    $pakaian_kegiatan = filter_var($_POST['pakaian_kegiatan'], FILTER_SANITIZE_STRING);
-    $pejabat = filter_var($_POST['pejabat'], FILTER_SANITIZE_STRING);
-    $hasil_agenda = filter_var($_POST['hasil_agenda'], FILTER_SANITIZE_STRING);
-    $status = filter_var($_POST['status'], FILTER_SANITIZE_NUMBER_INT);
+    // Sanitize inputs
+    $tgl_agenda = $koneksi->real_escape_string($_POST['tgl_agenda'] ?? '');
+    $waktu = $koneksi->real_escape_string($_POST['waktu'] ?? '');
+    $nama_kegiatan = $koneksi->real_escape_string($_POST['nama_kegiatan'] ?? '');
+    $tempat_kegiatan = $koneksi->real_escape_string($_POST['tempat_kegiatan'] ?? '');
+    $penanggungjawab_kegiatan = $koneksi->real_escape_string($_POST['penanggungjawab_kegiatan'] ?? '');
+    $pakaian_kegiatan = $koneksi->real_escape_string($_POST['pakaian_kegiatan'] ?? '');
+    $pejabat = $koneksi->real_escape_string($_POST['pejabat'] ?? '');
+    $hasil_agenda = $koneksi->real_escape_string($_POST['hasil_agenda'] ?? '');
+    $status = $koneksi->real_escape_string($_POST['status'] ?? '6');
 
-    // Proses unggah file
-    $lampiran = "";
-    $uploadOk = 1;
-    $max_filesize = 2097152; // 2MB dalam byte
-
+    // Handle file upload
+    $lampiran = '';
     if (isset($_FILES['lampiran']) && $_FILES['lampiran']['error'] == 0) {
+        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx'];
+        $file_name = $_FILES['lampiran']['name'];
+        $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
         $file_size = $_FILES['lampiran']['size'];
-        $file_info = pathinfo($_FILES["lampiran"]["name"]);
-        $file_extension = strtolower($file_info['extension']);
-        $allowed_extensions = array("pdf", "doc", "docx", "jpg", "jpeg", "png");
 
-        // Cek ukuran file
-        if ($file_size > $max_filesize) {
-            $pesan_error = "Ukuran file melebihi 2MB. Mohon unggah file yang lebih kecil.";
-            $uploadOk = 0;
-        }
+        if (in_array($file_ext, $allowed)) {
+            if ($file_size <= 5 * 1024 * 1024) {
+                $new_filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file_name);
+                $upload_path = 'uploads/' . $new_filename;
 
-        // Cek ekstensi file
-        if (!in_array($file_extension, $allowed_extensions)) {
-            $pesan_error = "Tipe file tidak diizinkan. Hanya PDF, Word, dan gambar yang diperbolehkan.";
-            $uploadOk = 0;
-        }
-
-        // Cek jika ada error
-        if ($uploadOk == 1) {
-            $target_dir = "uploads/";
-            // Buat nama file unik untuk mencegah overwriting dan eksekusi skrip
-            $unique_filename = md5(uniqid(rand(), true)) . '.' . $file_extension;
-            $target_file = $target_dir . $unique_filename;
-            
-            // Pastikan direktori 'uploads' ada dan memiliki izin tulis
-            if (!is_dir($target_dir)) {
-                mkdir($target_dir, 0755, true);
-            }
-
-            if (move_uploaded_file($_FILES["lampiran"]["tmp_name"], $target_file)) {
-                $lampiran = $unique_filename;
+                if (move_uploaded_file($_FILES['lampiran']['tmp_name'], $upload_path)) {
+                    $lampiran = $new_filename;
+                } else {
+                    $pesan_error = "Gagal mengupload file.";
+                }
             } else {
-                $pesan_error = "Terjadi kesalahan saat mengunggah file. Kode error: " . $_FILES['lampiran']['error'];
+                $pesan_error = "Ukuran file terlalu besar (max 5MB).";
             }
+        } else {
+            $pesan_error = "Tipe file tidak diizinkan.";
         }
     }
-    
-    if (empty($pesan_error)) {
-        // Gunakan prepared statements untuk mencegah SQL Injection
-        $sql = "INSERT INTO tb_agenda (tgl_agenda, waktu, nama_kegiatan, tempat_kegiatan, penanggungjawab_kegiatan, pakaian_kegiatan, pejabat, lampiran, hasil_agenda, id_status) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        
-        $stmt = $koneksi->prepare($sql);
-        
-        // Periksa apakah prepared statement berhasil
-        if ($stmt) {
-            $stmt->bind_param("sssssssssi", $tgl_agenda, $waktu, $nama_kegiatan, $tempat_kegiatan, $penanggungjawab_kegiatan, $pakaian_kegiatan, $pejabat, $lampiran, $hasil_agenda, $status);
 
-            if ($stmt->execute()) {
-                header("Location: index.php");
-                exit();
-            } else {
-                $pesan_error = "Error saat menyimpan data ke database: " . $stmt->error;
-            }
-            $stmt->close();
+    // Validate required fields
+    if (
+        empty($tgl_agenda) || empty($waktu) || empty($nama_kegiatan) ||
+        empty($tempat_kegiatan) || empty($penanggungjawab_kegiatan) ||
+        empty($pakaian_kegiatan) || empty($pejabat) || empty($status)
+    ) {
+        $pesan_error = "Semua field wajib diisi!";
+    }
+
+    if (empty($pesan_error)) {
+        $sql = "INSERT INTO tb_agenda (
+                    tgl_agenda, 
+                    waktu, 
+                    nama_kegiatan, 
+                    tempat_kegiatan, 
+                    penanggungjawab_kegiatan, 
+                    pakaian_kegiatan, 
+                    pejabat, 
+                    lampiran, 
+                    hasil_agenda, 
+                    id_status
+                ) VALUES (
+                    '$tgl_agenda',
+                    '$waktu',
+                    '$nama_kegiatan',
+                    '$tempat_kegiatan',
+                    '$penanggungjawab_kegiatan',
+                    '$pakaian_kegiatan',
+                    '$pejabat',
+                    '$lampiran',
+                    '$hasil_agenda',
+                    '$status'
+                )";
+
+        if ($koneksi->query($sql)) {
+            header("Location: index.php?success=1");
+            exit();
         } else {
-            $pesan_error = "Error saat mempersiapkan statement: " . $koneksi->error;
+            $pesan_error = "Error: " . $koneksi->error;
         }
     }
 }
 
-// Ambil data status dari tabel tb_status untuk combobox
+// Get dropdown data
 $sql_status = "SELECT * FROM tb_status ORDER BY nama_status ASC";
 $result_status = $koneksi->query($sql_status);
 
-// Ambil data pejabat dari tabel tb_pejabat untuk combobox
 $sql_pejabat = "SELECT * FROM tb_pejabat ORDER BY kode_pejabat ASC";
 $result_pejabat = $koneksi->query($sql_pejabat);
 ?>
+<!-- HTML form tetap sama seperti sebelumnya -->
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambah Agenda</title>
+    <title>Tambah Agenda Baru</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        .error {
-            color: #dc3545;
-            background-color: #f8d7da;
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .alert {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
             border: 1px solid #f5c6cb;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="time"],
+        select,
+        textarea {
+            width: 100%;
             padding: 10px;
+            border: 1px solid #ddd;
             border-radius: 4px;
-            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .required {
+            color: red;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #4361ee;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .file-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <h2>Tambah Agenda Baru</h2>
-        <?php if (!empty($pesan_error)): ?>
-            <p class="error"><?php echo htmlspecialchars($pesan_error); ?></p>
-        <?php endif; ?>
+        <div class="form-container">
+            <h1><i class="fas fa-plus-circle"></i> Tambah Agenda Baru</h1>
 
-        <form id="formAgenda" action="tambah.php" method="post" enctype="multipart/form-data">
-            <label for="tgl_agenda">Tanggal Agenda:</label>
-            <input type="date" name="tgl_agenda" id="tgl_agenda_input" required>
-            
-            <label for="waktu">Waktu:</label>
-            <input type="time" name="waktu" required>
+            <?php if (!empty($pesan_error)): ?>
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-triangle"></i> <?php echo htmlspecialchars($pesan_error); ?>
+                </div>
+            <?php endif; ?>
 
-            <label for="nama_kegiatan">Nama Kegiatan:</label>
-            <input type="text" name="nama_kegiatan" required>
+            <form method="post" enctype="multipart/form-data" onsubmit="return validateForm()">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
 
-            <label for="tempat_kegiatan">Tempat Kegiatan:</label>
-            <input type="text" name="tempat_kegiatan" required>
+                <div class="form-group">
+                    <label for="tgl_agenda"><span class="required">*</span> Tanggal Agenda</label>
+                    <input type="date" id="tgl_agenda" name="tgl_agenda" required
+                        value="<?php echo date('Y-m-d'); ?>">
+                </div>
 
-            <label for="penanggungjawab_kegiatan">Penanggung Jawab:</label>
-            <input type="text" name="penanggungjawab_kegiatan" required>
-            
-            <label for="pakaian_kegiatan">Pakaian:</label>
-            <input type="text" name="pakaian_kegiatan" required>
-            
-            <!-- <label for="pejabat">Pejabat:</label>
-            <input type="text" name="pejabat" required> -->
+                <div class="form-group">
+                    <label for="waktu"><span class="required">*</span> Waktu</label>
+                    <input type="time" id="waktu" name="waktu" required
+                        value="<?php echo date('H:i'); ?>">
+                </div>
 
-            <label for="pejabat">Pejabat:</label>
-            <select name="pejabat" id="pejabat" required>
-                <option value="">-- Pilih Pejabat --</option>
-                <?php
-                if ($result_pejabat && $result_pejabat->num_rows > 0) {
-                    while($row_pejabat = $result_pejabat->fetch_assoc()) {
-                        echo "<option value='" . $row_pejabat['id'] . "'>" . $row_pejabat['nama_jabatan'] . "</option>";
-                    }
-                } else {
-                    echo "<option value=''>Tidak ada pejabat</option>";
-                }
-                ?>
-            </select>
+                <div class="form-group">
+                    <label for="nama_kegiatan"><span class="required">*</span> Nama Kegiatan</label>
+                    <input type="text" id="nama_kegiatan" name="nama_kegiatan" required
+                        placeholder="Masukkan nama kegiatan">
+                </div>
 
-            <label for="lampiran">Lampiran:</label>
-            <input type="file" name="lampiran" id="lampiran">
-            <p id="pesan_ukuran_file" style="color: #dc3545; display: none;">Tidak bisa diupload karena ukuran file melebihi 2MB.</p>
-            <p id="ukuran-file" style="margin-top: 5px; font-size: 14px; color: #555;"></p>
-            
-            <label for="hasil_agenda">Hasil yang Dicapai:</label>
-            <textarea name="hasil_agenda" id="hasil_agenda"></textarea>
+                <div class="form-group">
+                    <label for="tempat_kegiatan"><span class="required">*</span> Tempat Kegiatan</label>
+                    <input type="text" id="tempat_kegiatan" name="tempat_kegiatan" required
+                        placeholder="Masukkan tempat kegiatan">
+                </div>
 
-            <label for="status">Status:</label>
-            <select name="status" id="status" required>
-                <?php
-                if ($result_status && $result_status->num_rows > 0) {
-                    while($row_status = $result_status->fetch_assoc()) {
-                        // Lakukan HTML escaping untuk mencegah XSS
-                        echo "<option value='" . htmlspecialchars($row_status['id_status']) . "'>" . htmlspecialchars($row_status['nama_status']) . "</option>";
-                    }
-                } else {
-                    echo "<option value=''>Tidak ada status</option>";
-                }
-                ?>
-            </select>
+                <div class="form-group">
+                    <label for="penanggungjawab_kegiatan"><span class="required">*</span> Penanggung Jawab</label>
+                    <input type="text" id="penanggungjawab_kegiatan" name="penanggungjawab_kegiatan" required
+                        placeholder="Nama penanggung jawab">
+                </div>
 
-            <button type="submit">Simpan Agenda</button>
-            <a href="index.php" class="button-kembali">Kembali</a>
-        </form>
+                <div class="form-group">
+                    <label for="pakaian_kegiatan"><span class="required">*</span> Pakaian</label>
+                    <input type="text" id="pakaian_kegiatan" name="pakaian_kegiatan" required
+                        placeholder="Contoh: PDH, PDL, Batik">
+                </div>
+
+                <div class="form-group">
+                    <label for="pejabat"><span class="required">*</span> Pejabat</label>
+                    <select id="pejabat" name="pejabat" required>
+                        <option value="">-- Pilih Pejabat --</option>
+                        <?php if ($result_pejabat && $result_pejabat->num_rows > 0): ?>
+                            <?php while ($row = $result_pejabat->fetch_assoc()): ?>
+                                <option value="<?php echo htmlspecialchars($row['id']); ?>">
+                                    <?php echo htmlspecialchars($row['nama_jabatan'] . ' - ' . $row['nama_pejabat']); ?>
+                                </option>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <option value="">Data pejabat tidak ditemukan</option>
+                        <?php endif; ?>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="status"><span class="required">*</span> Status</label>
+                    <select id="status" name="status" required>
+                        <option value="">-- Pilih Status --</option>
+                        <?php if ($result_status && $result_status->num_rows > 0): ?>
+                            <?php while ($row = $result_status->fetch_assoc()): ?>
+                                <option value="<?php echo htmlspecialchars($row['id_status']); ?>">
+                                    <?php echo htmlspecialchars($row['nama_status']); ?>
+                                </option>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <option value="6">Belum Mulai</option>
+                        <?php endif; ?>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="lampiran">Lampiran</label>
+                    <input type="file" id="lampiran" name="lampiran"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                    <div class="file-info">
+                        Ukuran maksimal: 5MB. Format: PDF, DOC, DOCX, JPG, PNG
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="hasil_agenda">Hasil yang Dicapai</label>
+                    <textarea id="hasil_agenda" name="hasil_agenda"
+                        placeholder="Hasil yang dicapai dari kegiatan"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <a href="index.php" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Kembali
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Simpan Agenda
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script>
-        document.getElementById('lampiran').addEventListener('change', function() {
-            const fileInput = this;
-            const ukuranFileElement = document.getElementById('ukuran-file');
-            const pesanErrorElement = document.getElementById('pesan_ukuran_file');
-            const submitButton = document.querySelector('button[type="submit"]');
+        function validateForm() {
+            let valid = true;
+            const requiredFields = document.querySelectorAll('[required]');
 
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    valid = false;
+                    field.style.borderColor = 'red';
+
+                    // Show error
+                    let error = field.parentNode.querySelector('.field-error');
+                    if (!error) {
+                        error = document.createElement('div');
+                        error.className = 'field-error';
+                        error.style.color = 'red';
+                        error.style.fontSize = '12px';
+                        error.style.marginTop = '5px';
+                        field.parentNode.appendChild(error);
+                    }
+                    error.textContent = 'Field ini wajib diisi';
+                } else {
+                    field.style.borderColor = '';
+
+                    // Remove error
+                    const error = field.parentNode.querySelector('.field-error');
+                    if (error) {
+                        error.remove();
+                    }
+                }
+            });
+
+            if (!valid) {
+                alert('Harap lengkapi semua field yang wajib diisi!');
+                return false;
+            }
+
+            // File validation
+            const fileInput = document.getElementById('lampiran');
             if (fileInput.files.length > 0) {
                 const file = fileInput.files[0];
-                const fileSize = file.size; // Ukuran dalam byte
-                const maxFileSize = 2 * 1024 * 1024; // 2MB dalam byte
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                const allowedTypes = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
+                const fileExt = file.name.split('.').pop().toLowerCase();
 
-                let ukuranTampil;
-                if (fileSize > 1024 * 1024) {
-                    ukuranTampil = (fileSize / (1024 * 1024)).toFixed(2) + ' MB';
-                } else {
-                    ukuranTampil = (fileSize / 1024).toFixed(2) + ' KB';
+                if (file.size > maxSize) {
+                    alert('Ukuran file terlalu besar. Maksimal 5MB.');
+                    return false;
                 }
 
-                ukuranFileElement.textContent = 'Ukuran file yang akan diupload: ' + ukuranTampil;
-
-                // Validasi ukuran dan nonaktifkan tombol jika melebihi batas
-                if (fileSize > maxFileSize) {
-                    pesanErrorElement.style.display = 'block';
-                    ukuranFileElement.style.color = '#dc3545';
-                    submitButton.disabled = true;
-                } else {
-                    pesanErrorElement.style.display = 'none';
-                    ukuranFileElement.style.color = '#555';
-                    submitButton.disabled = false;
+                if (!allowedTypes.includes(fileExt)) {
+                    alert('Tipe file tidak diizinkan. Hanya: PDF, DOC, DOCX, JPG, PNG');
+                    return false;
                 }
-            } else {
-                // Jika tidak ada file yang dipilih
-                ukuranFileElement.textContent = '';
-                pesanErrorElement.style.display = 'none';
-                submitButton.disabled = false;
+            }
+
+            return true;
+        }
+
+        // Set minimum date to today
+        document.getElementById('tgl_agenda').min = new Date().toISOString().split('T')[0];
+
+        // Preview file info
+        document.getElementById('lampiran').addEventListener('change', function(e) {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                const size = (file.size / (1024 * 1024)).toFixed(2);
+                const info = document.querySelector('.file-info');
+                info.innerHTML = `File: ${file.name} (${size} MB)`;
             }
         });
     </script>
 </body>
+
 </html>
 
-<?php $koneksi->close(); ?>
+<?php
+// Close database connection
+if (isset($koneksi)) {
+    $koneksi->close();
+}
+?>

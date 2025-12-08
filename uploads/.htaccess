@@ -1,0 +1,22 @@
+# uploads/.htaccess
+Order Deny,Allow
+Deny from all
+
+# Allow access only to specific file types
+<FilesMatch "\.(jpg|jpeg|png|gif|pdf|doc|docx)$">
+    Allow from all
+</FilesMatch>
+
+# Disable PHP execution
+<FilesMatch "\.(php|php5|php7|phtml)$">
+    Deny from all
+</FilesMatch>
+
+# Security headers
+Header set X-Content-Type-Options "nosniff"
+Header set X-Frame-Options "DENY"
+
+# Cache control
+<FilesMatch "\.(jpg|jpeg|png|gif|pdf)$">
+    Header set Cache-Control "public, max-age=31536000"
+</FilesMatch>

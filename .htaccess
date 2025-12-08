@@ -1,0 +1,28 @@
+# Enable rewrite engine
+RewriteEngine On
+
+# Set base path (sesuaikan dengan lokasi)
+RewriteBase /agenda-pimpinan/
+
+# Allow direct access to files and directories
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Rewrite all other requests to index.php
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+</IfModule>
+
+# Disable directory listing
+Options -Indexes
+
+# Protect sensitive files
+<FilesMatch "\.(htaccess|ini|log|sh|sql|bak)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
