@@ -103,12 +103,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $is_edit = true; // Setelah insert, menjadi edit mode
         }
 
+        // if ($koneksi->query($sql)) {
+        //     // Setelah berhasil disimpan/update, update status agenda menjadi "Selesai"
+        //     $sql_update_status = "UPDATE tb_agenda SET id_status = 4 WHERE id_agenda = $id_agenda";
+        //     $koneksi->query($sql_update_status);
+
+        //     $message = "Tindak lanjut berhasil $action dan status agenda diperbarui!";
+
+
+        // Di bagian tindaklanjut.php, saat menyimpan/update tindak lanjut
+        // Tambahkan ini setelah query INSERT/UPDATE berhasil:
+
         if ($koneksi->query($sql)) {
             // Setelah berhasil disimpan/update, update status agenda menjadi "Selesai"
-            $sql_update_status = "UPDATE tb_agenda SET id_status = 4 WHERE id_agenda = $id_agenda";
-            $koneksi->query($sql_update_status);
+            // Cari id_status untuk "Selesai"
+            $sql_selesai = "SELECT id_status FROM tb_status WHERE nama_status = 'Selesai' LIMIT 1";
+            $result_selesai = $koneksi->query($sql_selesai);
 
-            $message = "Tindak lanjut berhasil $action dan status agenda diperbarui!";
+            if ($result_selesai->num_rows > 0) {
+                $selesai = $result_selesai->fetch_assoc();
+                $id_status_selesai = $selesai['id_status'];
+
+                $sql_update_status = "UPDATE tb_agenda SET id_status = $id_status_selesai WHERE id_agenda = $id_agenda";
+                $koneksi->query($sql_update_status);
+            }
+
+            $message = "Tindak lanjut berhasil $action dan status agenda diperbarui ke 'Selesai'!";
+            // ... sisa kode
 
             // Refresh data tindak lanjut
             $result_check = $koneksi->query($sql_check);
@@ -127,27 +148,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     } else {
         $message = "Harap isi semua kolom yang wajib.";
-    }
-
-    // Di bagian tindaklanjut.php, saat menyimpan/update tindak lanjut
-    // Tambahkan ini setelah query INSERT/UPDATE berhasil:
-
-    if ($koneksi->query($sql)) {
-        // Setelah berhasil disimpan/update, update status agenda menjadi "Selesai"
-        // Cari id_status untuk "Selesai"
-        $sql_selesai = "SELECT id_status FROM tb_status WHERE nama_status = 'Selesai' LIMIT 1";
-        $result_selesai = $koneksi->query($sql_selesai);
-
-        if ($result_selesai->num_rows > 0) {
-            $selesai = $result_selesai->fetch_assoc();
-            $id_status_selesai = $selesai['id_status'];
-
-            $sql_update_status = "UPDATE tb_agenda SET id_status = $id_status_selesai WHERE id_agenda = $id_agenda";
-            $koneksi->query($sql_update_status);
-        }
-
-        $message = "Tindak lanjut berhasil $action dan status agenda diperbarui ke 'Selesai'!";
-        // ... sisa kode
     }
 }
 

@@ -1,9 +1,6 @@
 <?php
-// security.php - Perbaikan untuk error session
-
 class Security
 {
-
     // CSRF Protection
     public static function generateCSRFToken()
     {
@@ -244,7 +241,3 @@ class Security
         return null;
     }
 }
-
-// Generate CSRF token for forms
-// Jangan start session di sini, biarkan di-handle oleh method yang membutuhkan
-// define('CSRF_TOKEN', Security::generateCSRFToken()); // Pindahkan ke file yang membutuhkan

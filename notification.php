@@ -221,5 +221,4 @@ function runDailyNotifications()
     return $results;
 }
 
-// Uncomment to run manually for testing
-// runDailyNotifications();
+

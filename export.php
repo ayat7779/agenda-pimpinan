@@ -3,9 +3,6 @@
 include 'koneksi.php';
 include 'security.php';
 
-// Cek apakah user memiliki akses (bisa ditambahkan authentication)
-// For now, we'll just allow it
-
 // Set headers for CSV download
 header('Content-Type: text/csv; charset=utf-8');
 header('Content-Disposition: attachment; filename=agenda-pimpinan-' . date('Y-m-d') . '.csv');

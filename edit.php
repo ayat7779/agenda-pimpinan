@@ -1,5 +1,4 @@
 <?php
-// edit.php - Disable status jika sudah ada tindak lanjut
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -118,7 +117,6 @@ $result_status = $koneksi->query($sql_status);
 $sql_pejabat = "SELECT * FROM tb_pejabat ORDER BY kode_pejabat ASC";
 $result_pejabat = $koneksi->query($sql_pejabat);
 ?>
-<!-- HTML form tetap sama -->
 
 <!DOCTYPE html>
 <html lang="id">

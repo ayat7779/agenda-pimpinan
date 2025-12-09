@@ -1,5 +1,5 @@
 <?php
-// tambah.php - MySQLi compatible
+// tambah.php
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -96,7 +96,6 @@ $result_status = $koneksi->query($sql_status);
 $sql_pejabat = "SELECT * FROM tb_pejabat ORDER BY kode_pejabat ASC";
 $result_pejabat = $koneksi->query($sql_pejabat);
 ?>
-<!-- HTML form tetap sama seperti sebelumnya -->
 
 <!DOCTYPE html>
 <html lang="id">

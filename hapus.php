@@ -1,5 +1,5 @@
 <?php
-// hapus.php - Versi dengan konfirmasi dan hapus semua data terkait
+// hapus.php 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
