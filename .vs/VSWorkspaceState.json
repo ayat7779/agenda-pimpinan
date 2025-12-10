@@ -1,0 +1,11 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\middlewares",
+    "\\views",
+    "\\views\\auth",
+    "\\views\\dashboard"
+  ],
+  "SelectedNode": "\\middlewares\\AuthMiddleware.php",
+  "PreviewInSolutionExplorer": false
+}

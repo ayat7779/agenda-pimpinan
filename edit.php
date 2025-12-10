@@ -1,9 +1,17 @@
 <?php
+// edit.php - Updated with authentication
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-include 'koneksi.php';
+// ===== AUTH CHECK =====
+session_start();
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    header('Location: login.php');
+    exit;
+}
+
+include __DIR__ . '/koneksi.php';
 
 $pesan_error = "";
 $agenda = null;
@@ -14,6 +22,8 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 }
 
 $id_agenda = (int)$_GET['id'];
+$userId = $_SESSION['user_id'] ?? 0;
+$userRole = $_SESSION['role'] ?? 'staff';
 
 // Get agenda data
 $sql = "SELECT a.*, p.nama_jabatan, p.nama_pejabat 
@@ -29,6 +39,30 @@ if ($result->num_rows === 0) {
 
 $agenda = $result->fetch_assoc();
 
+// ===== PERMISSION CHECK =====
+$canEdit = false;
+
+if ($userRole === 'super_admin' || $userRole === 'admin') {
+    $canEdit = true;
+} elseif ($userRole === 'pimpinan') {
+    // Pimpinan can edit if they created it or if it involves them
+    if ($agenda['created_by'] == $userId || 
+        strpos($agenda['penanggungjawab_kegiatan'], $_SESSION['full_name']) !== false) {
+        $canEdit = true;
+    }
+} elseif ($userRole === 'staff') {
+    // Staff can only edit if they created it
+    if ($agenda['created_by'] == $userId) {
+        $canEdit = true;
+    }
+}
+
+if (!$canEdit) {
+    $_SESSION['error'] = 'Anda tidak memiliki izin untuk mengedit agenda ini.';
+    header("Location: index.php");
+    exit();
+}
+
 // Cek apakah sudah ada tindak lanjut
 $sql_check_tl = "SELECT COUNT(*) as total FROM tb_tindaklanjut WHERE id_agenda = $id_agenda";
 $result_tl = $koneksi->query($sql_check_tl);
@@ -36,6 +70,10 @@ $has_tindaklanjut = $result_tl->fetch_assoc()['total'] > 0;
 
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Permission check for form submission
+    if (!$canEdit) {
+        $pesan_error = "Anda tidak memiliki izin untuk mengedit agenda ini.";
+    } else {
     // Sanitize inputs
     $tgl_agenda = $koneksi->real_escape_string($_POST['tgl_agenda'] ?? '');
     $waktu = $koneksi->real_escape_string($_POST['waktu'] ?? '');
@@ -52,7 +90,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         $status = $koneksi->real_escape_string($_POST['status'] ?? '6');
     }
-
     // Handle file
     $lampiran = $agenda['lampiran'] ?? '';
 
@@ -243,12 +280,38 @@ $result_pejabat = $koneksi->query($sql_pejabat);
             color: #666;
             margin-top: 5px;
         }
+         .permission-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .permission-notice i {
+            font-size: 18px;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
         <div class="form-container">
+                    <a href="index.php" class="back-button">
+                <i class="fas fa-arrow-left"></i> Kembali ke Daftar Agenda
+            </a>
+            
+            <!-- Permission Notice -->
+            <div class="permission-notice">
+                <i class="fas fa-info-circle"></i>
+                Anda sedang mengedit agenda sebagai: <strong><?php echo htmlspecialchars($_SESSION['full_name']); ?></strong>
+                (<?php echo htmlspecialchars($_SESSION['role']); ?>)
+            </div>
+
             <h1><i class="fas fa-edit"></i> Edit Agenda</h1>
 
             <?php if (!empty($pesan_error)): ?>
@@ -257,7 +320,7 @@ $result_pejabat = $koneksi->query($sql_pejabat);
                 </div>
             <?php endif; ?>
 
-            <?php if ($agenda): ?>
+            <?php if ($agenda && $canEdit): ?>
                 <form method="post" enctype="multipart/form-data" onsubmit="return validateForm()">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                     <input type="hidden" name="id_agenda" value="<?php echo $id_agenda; ?>">
@@ -313,6 +376,8 @@ $result_pejabat = $koneksi->query($sql_pejabat);
                                     </option>
                                 <?php endwhile; ?>
                             <?php else: ?>
+                            <div class="alert alert-error">
+                                <i class="fas fa-exclamation-triangle"></i> Anda tidak memiliki izin untuk mengedit agenda ini.</div>
                                 <option value="">Data pejabat tidak ditemukan</option>
                             <?php endif; ?>
                         </select>

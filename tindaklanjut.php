@@ -1,26 +1,39 @@
 <?php
-// tindaklanjut.php - Dengan fitur edit tindak lanjut
+// tindaklanjut.php - Updated with authentication
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-include 'koneksi.php';
-
-// Simple session
+// ===== AUTH CHECK =====
 session_start();
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    header('Location: login.php');
+    exit;
+}
+
+include __DIR__ . '/koneksi.php';
 
 // Pastikan id_agenda ada
 if (!isset($_GET['id']) || empty($_GET['id'])) {
-    echo "<div style='background: #f8d7da; color: #721c24; padding: 15px; margin: 15px;'>
-            ID Agenda tidak ditemukan. <a href='index.php'>Kembali</a>
-          </div>";
+    $_SESSION['error'] = 'ID Agenda tidak ditemukan.';
+    header('Location: index.php');
     exit;
 }
 
 $id_agenda = (int)$_GET['id'];
+$userId = $_SESSION['user_id'] ?? 0;
+$userRole = $_SESSION['role'] ?? 'staff';
 $message = "";
 $is_edit = false;
 $tindaklanjut_data = null;
+
+// Cek permission untuk tindak lanjut
+$canAddTL = in_array($userRole, ['super_admin', 'admin', 'pimpinan']);
+if (!$canAddTL) {
+    $_SESSION['error'] = 'Anda tidak memiliki izin untuk menambah tindak lanjut.';
+    header('Location: index.php');
+    exit;
+}
 
 // Cek apakah sudah ada data tindak lanjut
 $sql_check = "SELECT * FROM tb_tindaklanjut WHERE id_agenda = $id_agenda ORDER BY tgl_tindaklanjut DESC LIMIT 1";
@@ -33,6 +46,10 @@ if ($result_check->num_rows > 0) {
 
 // Cek apakah form sudah disubmit
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Permission check
+    if (!$canAddTL) {
+        $message = "Anda tidak memiliki izin untuk menambah/mengedit tindak lanjut.";
+    } else {
     // Ambil data dari form
     $isi_tindaklanjut = $koneksi->real_escape_string($_POST['isi_tindaklanjut'] ?? '');
     $penindaklanjut = $koneksi->real_escape_string($_POST['penindaklanjut'] ?? '');

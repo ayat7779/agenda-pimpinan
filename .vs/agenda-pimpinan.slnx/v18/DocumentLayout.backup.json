@@ -1,0 +1,88 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\xampp\\htdocs\\agenda-pimpinan\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\xampp\\htdocs\\agenda-pimpinan\\views\\auth\\login.php||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:views\\auth\\login.php||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\xampp\\htdocs\\agenda-pimpinan\\controller\\AuthController.php||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:controller\\AuthController.php||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\xampp\\htdocs\\agenda-pimpinan\\models\\Auth.php||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:models\\Auth.php||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\xampp\\htdocs\\agenda-pimpinan\\models\\User.php||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:models\\User.php||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "login.php",
+              "DocumentMoniker": "C:\\xampp\\htdocs\\agenda-pimpinan\\views\\auth\\login.php",
+              "RelativeDocumentMoniker": "views\\auth\\login.php",
+              "ToolTip": "C:\\xampp\\htdocs\\agenda-pimpinan\\views\\auth\\login.php",
+              "RelativeToolTip": "views\\auth\\login.php",
+              "ViewState": "AgIAAE0AAAAAAAAAAAAswDsBAAAHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-12-09T07:01:42.896Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "AuthController.php",
+              "DocumentMoniker": "C:\\xampp\\htdocs\\agenda-pimpinan\\controller\\AuthController.php",
+              "RelativeDocumentMoniker": "controller\\AuthController.php",
+              "ToolTip": "C:\\xampp\\htdocs\\agenda-pimpinan\\controller\\AuthController.php",
+              "RelativeToolTip": "controller\\AuthController.php",
+              "ViewState": "AgIAAIUAAAAAAAAAAAAswK0AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-12-09T07:01:21.663Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "User.php",
+              "DocumentMoniker": "C:\\xampp\\htdocs\\agenda-pimpinan\\models\\User.php",
+              "RelativeDocumentMoniker": "models\\User.php",
+              "ToolTip": "C:\\xampp\\htdocs\\agenda-pimpinan\\models\\User.php",
+              "RelativeToolTip": "models\\User.php",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAGIAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-12-09T07:00:46.318Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Auth.php",
+              "DocumentMoniker": "C:\\xampp\\htdocs\\agenda-pimpinan\\models\\Auth.php",
+              "RelativeDocumentMoniker": "models\\Auth.php",
+              "ToolTip": "C:\\xampp\\htdocs\\agenda-pimpinan\\models\\Auth.php",
+              "RelativeToolTip": "models\\Auth.php",
+              "ViewState": "AgIAALoAAAAAAAAAAAAswOIAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-12-09T07:00:26.276Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

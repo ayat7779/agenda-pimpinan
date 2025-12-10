@@ -1,10 +1,25 @@
 <?php
-// tambah.php
+// tambah.php - Updated with authentication
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-include 'koneksi.php';
+// ===== AUTH CHECK =====
+session_start();
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    header('Location: login.php');
+    exit;
+}
+
+// Check permission
+$userRole = $_SESSION['role'] ?? 'staff';
+if (!in_array($userRole, ['super_admin', 'admin', 'pimpinan'])) {
+    $_SESSION['error'] = 'Anda tidak memiliki izin untuk menambah agenda.';
+    header('Location: index.php');
+    exit;
+}
+
+include __DIR__ . '/koneksi.php';
 
 $pesan_error = "";
 
@@ -19,6 +34,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $pejabat = $koneksi->real_escape_string($_POST['pejabat'] ?? '');
     $hasil_agenda = $koneksi->real_escape_string($_POST['hasil_agenda'] ?? '');
     $status = $koneksi->real_escape_string($_POST['status'] ?? '6');
+
+    // Get current user ID
+    $created_by = $_SESSION['user_id'] ?? null;
 
     // Handle file upload
     $lampiran = '';
@@ -66,7 +84,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     pejabat, 
                     lampiran, 
                     hasil_agenda, 
-                    id_status
+                    id_status,
+                    created_by,
+                    created_at
                 ) VALUES (
                     '$tgl_agenda',
                     '$waktu',
@@ -77,10 +97,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     '$pejabat',
                     '$lampiran',
                     '$hasil_agenda',
-                    '$status'
+                    '$status',
+                    '$created_by',
+                    NOW()
                 )";
 
         if ($koneksi->query($sql)) {
+            // Log activity
+            $log_sql = "INSERT INTO tb_audit_logs (user_id, action, table_name, record_id, created_at) 
+                       VALUES ('$created_by', 'create_agenda', 'tb_agenda', LAST_INSERT_ID(), NOW())";
+            $koneksi->query($log_sql);
+
+            $_SESSION['success'] = 'Agenda berhasil ditambahkan.';
             header("Location: index.php?success=1");
             exit();
         } else {
@@ -200,12 +228,45 @@ $result_pejabat = $koneksi->query($sql_pejabat);
             color: #666;
             margin-top: 5px;
         }
+
+        /* Add back button */
+        .back-button {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #4361ee;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-button i {
+            margin-right: 5px;
+        }
+
+        .user-info {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border-left: 4px solid #4361ee;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
         <div class="form-container">
+            <!-- Back button -->
+            <a href="index.php" class="back-button">
+                <i class="fas fa-arrow-left"></i> Kembali ke Daftar Agenda
+            </a>
+
+            <!-- User info -->
+            <div class="user-info">
+                <strong>Ditambahkan oleh:</strong> <?php echo htmlspecialchars($_SESSION['full_name'] ?? 'User'); ?>
+                (<?php echo htmlspecialchars($_SESSION['role'] ?? 'staff'); ?>)
+            </div>
+
             <h1><i class="fas fa-plus-circle"></i> Tambah Agenda Baru</h1>
 
             <?php if (!empty($pesan_error)): ?>
@@ -215,7 +276,7 @@ $result_pejabat = $koneksi->query($sql_pejabat);
             <?php endif; ?>
 
             <form method="post" enctype="multipart/form-data" onsubmit="return validateForm()">
-                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                <input type="hidden" name="csrf_token" value="<?php echo bin2hex(random_bytes(32)); ?>">
 
                 <div class="form-group">
                     <label for="tgl_agenda"><span class="required">*</span> Tanggal Agenda</label>
@@ -302,7 +363,7 @@ $result_pejabat = $koneksi->query($sql_pejabat);
 
                 <div class="form-actions">
                     <a href="index.php" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Kembali
+                        <i class="fas fa-times"></i> Batal
                     </a>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save"></i> Simpan Agenda

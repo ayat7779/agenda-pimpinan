@@ -4,7 +4,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-include 'koneksi.php';
+include __DIR__ . '/koneksi.php';
 
 // Jika metode POST (konfirmasi hapus)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id_agenda'])) {
